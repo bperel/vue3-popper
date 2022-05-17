@@ -2,7 +2,7 @@
   <div
     class="inline-block"
     :style="interactiveStyle"
-    @mouseleave="hover && closePopper()"
+    @closePopper="hover && closePopper()"
     ref="popperContainerNode"
   >
     <div
@@ -15,19 +15,23 @@
       <!-- The default slot to trigger the popper  -->
       <slot />
     </div>
-    <Transition name="fade">
-      <div
-        @click="!interactive && closePopper()"
-        v-show="shouldShowPopper"
-        class="popper"
-        ref="popperNode"
-      >
-        <slot name="content" :close="close" :isOpen="modifiedIsOpen">
-          {{ content }}
-        </slot>
-        <Arrow v-if="arrow" />
-      </div>
-    </Transition>
+    <PopperTeleportWrapper :teleport="teleport">
+      <Transition name="fade">
+        <div
+          @mouseover="hover && teleport && openPopper()"
+          @closePopper="hover && teleport && closePopper()"
+          @click="!interactive && closePopper()"
+          v-show="shouldShowPopper"
+          class="popper"
+          ref="popperNode"
+        >
+          <slot name="content" :close="close" :isOpen="modifiedIsOpen">
+            {{ content }}
+          </slot>
+          <Arrow v-if="arrow" />
+        </div>
+      </Transition>
+    </PopperTeleportWrapper>
   </div>
 </template>
 
@@ -45,6 +49,7 @@
   } from "vue";
   import { usePopper, useContent, useClickAway } from "@/composables";
   import Arrow from "./Arrow.vue";
+  import PopperTeleportWrapper from './PopperTeleportWrapper.vue'
 
   const emit = defineEmits(["open:popper", "close:popper"]);
   const slots = useSlots();
@@ -170,6 +175,13 @@
      * If the content is just a simple string, it can be passed in as a prop
      */
     content: {
+      type: String,
+      default: null,
+    },
+    /**
+     * Teleport popper element to selector
+     */
+    teleport: {
       type: String,
       default: null,
     },
